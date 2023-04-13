@@ -1,3 +1,4 @@
+import javax.swing.plaf.nimbus.State;
 import javax.xml.transform.Result;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -6,30 +7,32 @@ import java.sql.Statement;
 
 public class Database {
 
-    public static void main(String[] args) {
+    private static boolean isRegister = false;
+    private static boolean isLogin = false;
 
-        Connection c = null;
-        Statement stmt = null;
+//    public static void main(String[] args) {
+
+//        Connection c = null;
+//        Statement stmt = null;
 
         // Connection to the db
-        try {
-            Class.forName("org.postgresql.Driver");
-            /*
-            - for connection url, the last part is the database to connect to
-            - "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
-            - default user/username is postgres
-            - password is the one set during installation and setup
-             */
-            c = DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5432/testdb",
-                    "postgres", "temp");
-            System.out.println("Connected to Database.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            // Successfully exit program
-            System.exit(0);
-        }
+//        try {
+//            Class.forName("org.postgresql.Driver");
+//            /*
+//            - for connection url, the last part is the database to connect to
+//            - "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
+//            - default user/username is postgres
+//            - password is the one set during installation and setup
+//             */
+//            c = DriverManager.getConnection(
+//                    "jdbc:postgresql://localhost:5432/testdb",
+//                    "postgres", "temp");
+//            System.out.println("Connected to Database.");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+//            System.exit(0);
+//        }
 
         // Test to make table in sql
 /*          try {
@@ -83,7 +86,6 @@ public class Database {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            // Successfully exit program
             System.exit(0);
         }*/
 
@@ -123,7 +125,6 @@ public class Database {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            // Successfully exit program
             System.exit(0);
         }*/
 
@@ -158,12 +159,11 @@ public class Database {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            // Successfully exit program
             System.exit(0);
         }*/
 
         // Delete Data in table
-        try {
+        /*try {
             c.setAutoCommit(false);
             stmt = c.createStatement();
             String sql = "DELETE FROM company WHERE id = 4;";
@@ -193,11 +193,116 @@ public class Database {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            // Successfully exit program
+            System.exit(0);
+        }*/
+
+//    }
+
+    /*
+    Connection to Database
+    Registers the user
+    ...
+     */
+    public static void databaseMain() {
+
+        Connection c = null;
+        Statement stmt = null;
+        // Connect to database
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            /*
+            - for connection url, the last part is the database to connect to
+            - "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
+            - default user/username is postgres
+            - password is the one set during installation and setup
+             */
+            c = DriverManager.getConnection(
+                    "jdbc:postgresql://localhost:5432/testdb",
+                    "postgres", "temp");
+            System.out.println("Connected to Database.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
 
+        // Make table to store user info
+        if(isRegister) {
+            try {
+                stmt = c.createStatement();
+            /*
+            - SERIAL PRIMARY KEY is a shorthand way of defining a column that will be used as a unique identifier
+            for each row in a table
+            - UNIQUE is used to ensure that the values in a column are unique across all rows in the table
+            - NOT NULL means every row in the table must have a value in that column
+            - CHAR specifies the maximum length of the string. Any shorter values will be padded
+            with spaces to the specified length.
+            - VARCHAR specifies the maximum length of the string, but psql will only use as much space
+            as necessary to store the actual value.
+             */
+                String sql = "CREATE TABLE IF NOT EXISTS userinfo " +
+                        "(id SERIAL PRIMARY KEY NOT NULL, " +
+                        " username VARCHAR(50) UNIQUE NOT NULL, " +
+                        " password VARCHAR(255) NOT NULL)";
+                stmt.executeUpdate(sql);
+                stmt.close();
+                System.out.println("Attempt to make table has been completed.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            } finally {
+                if (stmt != null) {
+                    try {
+                        stmt.close();
+                    } catch (Exception e) {
+                        // Exception
+                    }
+                }
+                if (c != null) {
+                    try {
+                        c.close();
+                    } catch (Exception e) {
+                        // Exception
+                    }
+                }
+            }
+        }
     }
 
+    // Makes isRegister var true
+    public static void isRegister() {
+        isRegister = true;
+    }
+
+    // Makes isLogin var true
+    public static void isLogin() {
+        isLogin = true;
+    }
+
+    /*finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
+        }*/
 
 }
