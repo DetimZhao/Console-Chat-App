@@ -1,14 +1,16 @@
-import javax.swing.plaf.nimbus.State;
 import javax.xml.transform.Result;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Scanner;
 
 public class Database {
 
     private static boolean isRegister = false;
     private static boolean isLogin = false;
+    static Scanner input = new Scanner(System.in);
+
 
 //    public static void main(String[] args) {
 
@@ -16,23 +18,23 @@ public class Database {
 //        Statement stmt = null;
 
         // Connection to the db
-//        try {
-//            Class.forName("org.postgresql.Driver");
-//            /*
-//            - for connection url, the last part is the database to connect to
-//            - "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
-//            - default user/username is postgres
-//            - password is the one set during installation and setup
-//             */
-//            c = DriverManager.getConnection(
-//                    "jdbc:postgresql://localhost:5432/testdb",
-//                    "postgres", "temp");
-//            System.out.println("Connected to Database.");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-//            System.exit(0);
-//        }
+        /*try {
+            Class.forName("org.postgresql.Driver");
+            *//*
+            - for connection url, the last part is the database to connect to
+            - "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
+            - default user/username is postgres
+            - password is the one set during installation and setup
+             *//*
+            c = DriverManager.getConnection(
+                    "jdbc:postgresql://localhost:5432/testdb",
+                    "postgres", "temp");
+            System.out.println("Connected to Database.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }*/
 
         // Test to make table in sql
 /*          try {
@@ -207,8 +209,8 @@ public class Database {
 
         Connection c = null;
         Statement stmt = null;
-        // Connect to database
 
+        // Connect to database
         try {
             Class.forName("org.postgresql.Driver");
             /*
@@ -227,8 +229,13 @@ public class Database {
             System.exit(0);
         }
 
-        // Make table to store user info
+        /*
+        Makes table to store register info
+        Takes in user's username and password and adds it to psl query that is added to table
+        ...
+         */
         if(isRegister) {
+            // Make table to store user info (if it doesn't already exist)
             try {
                 stmt = c.createStatement();
             /*
@@ -248,6 +255,69 @@ public class Database {
                 stmt.executeUpdate(sql);
                 stmt.close();
                 System.out.println("Attempt to make table has been completed.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+
+            // Prompt user to register username and password, adds input to table
+            try {
+                boolean registerSuccess = false;
+                c.setAutoCommit(false); // Allows commits to the db
+                while(!registerSuccess) {
+                    stmt = c.createStatement();
+                    String username = promptRegisterForUser("Enter a username: ");
+                    String password = promptRegisterForUser("Enter a password: ");
+                    String sql = "INSERT INTO userinfo " +
+                            "(username, password) " +
+                            "VALUES (" + "'" + username + "'" + "," + "'" + password + "'" + "); ";
+//                stmt.executeLargeUpdate(sql);
+                    // Check if there are any issues registering username
+                    try {
+                        int rowsInserted = stmt.executeUpdate(sql);
+                        if (rowsInserted == 1) { // Check if rows of table increased
+                            System.out.println("\nUser registered successfully.\n");
+                            registerSuccess = true;
+                        }
+                        /*
+                        Catch any issues, most likely duplicate username
+                        Prompt user to try again to register or to quit
+                         */
+                    } catch (Exception e) {
+                        System.out.println("\nUser registration failed.\n");
+                        System.out.println("Error inserting user: " + e.getMessage());
+                        System.out.println("-----------------------------------------\n");
+                        System.out.println("The username may already exist.");
+                        displayRegistrationOptionsAfterFailure();
+                        System.out.println("-----------------------------------------");
+                        boolean continueRegistration = false;
+                        String userRegisterInput;
+                        // Prompts user to continue to register or to quit
+                        while (!continueRegistration) {
+                            userRegisterInput = input.nextLine();
+                            switch(userRegisterInput.toLowerCase()) {
+                                case "q", "quit":
+                                    System.out.println("Quitting Program.");
+                                    System.exit(0);
+                                    break;
+                                case "c", "continue":
+                                    System.out.println("Continuing Registration...\n");
+                                    break;
+                                default:
+                                    System.out.println("Invalid! Try again.\n");
+                                    displayRegistrationOptionsAfterFailure();
+                                    System.out.println("-----------------------------------------");
+                                    continue;
+                            }
+                            continueRegistration = true;
+                        }
+                    }
+//                stmt.close();
+                    c.commit();
+//                c.close();
+//                System.out.println("Added elements to the table");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -280,6 +350,20 @@ public class Database {
     public static void isLogin() {
         isLogin = true;
     }
+
+    public static String promptRegisterForUser(String promptMessage) {
+        System.out.print(promptMessage);
+//        Scanner input = new Scanner(System.in);
+        return input.nextLine();
+    }
+
+    public static void displayRegistrationOptionsAfterFailure() {
+        System.out.println("You may continue the registration process or quit.");
+        System.out.println("Please select from the following options:");
+        System.out.println("(C)ontinue, (Q)uit");
+    }
+
+
 
     /*finally {
             if (rs != null) {

@@ -25,12 +25,12 @@ public class Main {
             switch(userInput.toLowerCase()) {
                 case "r", "register":
                     System.out.println("r or register");
-                    Database.isRegister(); // sets isRegister to true Database
+                    Database.isRegister(); // sets isRegister to true in Database class
                     Database.databaseMain();
                     break;
                 case "l", "login":
                     System.out.println("l or login");
-                    Database.isLogin(); // sets isLogin to true in Database
+                    Database.isLogin(); // sets isLogin to true in Database class
                     Database.databaseMain();
                     break;
                 case "q", "quit":
@@ -46,7 +46,6 @@ public class Main {
             validOption = true; // Exit while loop once user picks valid choice
         }
     }
-
 
 
 }
