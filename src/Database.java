@@ -203,6 +203,7 @@ public class Database {
     /*
     Connection to Database
     Registers the user
+    Lets the user login
     ...
      */
     public static void databaseMain() {
@@ -222,7 +223,7 @@ public class Database {
             c = DriverManager.getConnection(
                     "jdbc:postgresql://localhost:5432/testdb",
                     "postgres", "temp");
-            System.out.println("Connected to Database.");
+            System.out.println("-> Connected to Database.");
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -254,7 +255,7 @@ public class Database {
                         " password VARCHAR(255) NOT NULL)";
                 stmt.executeUpdate(sql);
                 stmt.close();
-                System.out.println("Attempt to make table has been completed.");
+                System.out.println("-> Attempt to make table has been completed.");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -263,9 +264,9 @@ public class Database {
 
             // Prompt user to register username and password, adds input to table
             try {
-                boolean registerSuccess = false;
+                boolean registerSuccessful = false;
                 c.setAutoCommit(false); // Allows commits to the db
-                while(!registerSuccess) {
+                while(!registerSuccessful) {
                     stmt = c.createStatement();
                     String username = promptRegisterForUser("Enter a username: ");
                     String password = promptRegisterForUser("Enter a password: ");
@@ -278,7 +279,7 @@ public class Database {
                         int rowsInserted = stmt.executeUpdate(sql);
                         if (rowsInserted == 1) { // Check if rows of table increased
                             System.out.println("\nUser registered successfully.\n");
-                            registerSuccess = true;
+                            registerSuccessful = true;
                         }
                         /*
                         Catch any issues, most likely duplicate username
@@ -290,7 +291,6 @@ public class Database {
                         System.out.println("-----------------------------------------\n");
                         System.out.println("The username may already exist.");
                         displayRegistrationOptionsAfterFailure();
-                        System.out.println("-----------------------------------------");
                         boolean continueRegistration = false;
                         String userRegisterInput;
                         // Prompts user to continue to register or to quit
@@ -307,7 +307,6 @@ public class Database {
                                 default:
                                     System.out.println("Invalid! Try again.\n");
                                     displayRegistrationOptionsAfterFailure();
-                                    System.out.println("-----------------------------------------");
                                     continue;
                             }
                             continueRegistration = true;
@@ -323,6 +322,90 @@ public class Database {
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
             } finally {
+                if (stmt != null) {
+                    try {
+                        stmt.close();
+                    } catch (Exception e) {
+                        // Exception
+                    }
+                }
+                if (c != null) {
+                    try {
+                        c.close();
+                    } catch (Exception e) {
+                        // Exception
+                    }
+                }
+            }
+        }
+
+        /*
+        Takes in username and password
+        Checks if username/user exists in database, and whether their password is correct
+         */
+        if(isLogin) {
+            ResultSet rs = null;
+            try {
+                boolean loginSucessful = false;
+                while(!loginSucessful) {
+                    stmt = c.createStatement();
+                    String loginUsername = promptRegisterForUser("Enter your username: ");
+                    String loginPassword = promptRegisterForUser("Enter your password: ");
+                    rs = stmt.executeQuery("SELECT * FROM userinfo WHERE username = "
+                            + "'" + loginUsername + "'" + "; "); // Try to find user with query
+                    try {
+                        if (rs.next()) { // If there is another row, then means user is found
+                            String dbPassword = rs.getString("password");
+                            if (loginPassword.equals(dbPassword)) { // Check if stored password equals input password
+                                System.out.println("Login successful...\n");
+                                loginSucessful = true;
+                            } else {
+                                System.out.println("Incorrect password... Try Again.\n");
+                            }
+                        } else { // If the user is not found, either username is wrong or it doesn't exist
+                            System.out.println("\nUser not found. Username may be incorrect or does not exist.");
+                            displayLoginOptionsAfterUserNotFound();
+                            boolean continueLogin = false;
+                            String userLoginInput;
+                            // Prompts user to continue to login or to quit
+                            while (!continueLogin) {
+                                userLoginInput = input.nextLine();
+                                switch (userLoginInput.toLowerCase()) {
+                                    case "q", "quit":
+                                        System.out.println("Quitting Program.");
+                                        System.exit(0);
+                                        break;
+                                    case "c", "continue":
+                                        System.out.println("Continuing Login...\n");
+                                        break;
+                                    default:
+                                        System.out.println("Invalid! Try again.\n");
+                                        displayLoginOptionsAfterUserNotFound();
+                                        continue;
+                                }
+                                continueLogin = true;
+                            }
+                        }
+                        System.out.println("-> Trying to find login from user. Done.\n");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                        System.exit(0);
+                    }
+                }
+
+            } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+            } finally {
+                if (rs != null) {
+                    try {
+                        rs.close();
+                    } catch (Exception e) {
+                        // Exception
+                    }
+                }
                 if (stmt != null) {
                     try {
                         stmt.close();
@@ -361,7 +444,16 @@ public class Database {
         System.out.println("You may continue the registration process or quit.");
         System.out.println("Please select from the following options:");
         System.out.println("(C)ontinue, (Q)uit");
+        System.out.println("-----------------------------------------");
     }
+
+    public static void displayLoginOptionsAfterUserNotFound() {
+        System.out.println("You may continue the login process or quit.");
+        System.out.println("Please select from the following options:");
+        System.out.println("(C)ontinue, (Q)uit");
+        System.out.println("-----------------------------------------");
+    }
+
 
 
 
@@ -388,5 +480,18 @@ public class Database {
                 }
             }
         }*/
+
+    // Print out all the data from userinfo.
+    /*
+    rs = stmt.executeQuery("SELECT * FROM userinfo;");
+                while(rs.next()) {
+                    String dbUsername = rs.getString("username");
+                    String dbPassword = rs.getString("password");
+
+                    System.out.println("Username " + dbUsername);
+                    System.out.println("Password " + dbPassword);
+                }
+                System.out.println("Printing out all info from userinfo. Done. ");
+     */
 
 }
