@@ -5,6 +5,13 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Scanner;
 
+/*
+Database class focuses primarily on implementing and handling anything related to the psql database
+Registers the user
+Allows user to login
+...
+ */
+
 public class Database {
 
     private static boolean isRegister = false;
@@ -312,10 +319,7 @@ public class Database {
                             continueRegistration = true;
                         }
                     }
-//                stmt.close();
                     c.commit();
-//                c.close();
-//                System.out.println("Added elements to the table");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -356,7 +360,7 @@ public class Database {
                     try {
                         if (rs.next()) { // If there is another row, then means user is found
                             String dbPassword = rs.getString("password");
-                            if (loginPassword.equals(dbPassword)) { // Check if stored password equals input password
+                            if (loginPassword.equals(dbPassword)) { // Check if input password equals stored password
                                 System.out.println("Login successful...\n");
                                 loginSucessful = true;
                             } else {
@@ -434,12 +438,13 @@ public class Database {
         isLogin = true;
     }
 
+    // Prompts user for a message (username and password) and returns a string
     public static String promptRegisterForUser(String promptMessage) {
         System.out.print(promptMessage);
-//        Scanner input = new Scanner(System.in);
         return input.nextLine();
     }
 
+    // Displays options when register fails
     public static void displayRegistrationOptionsAfterFailure() {
         System.out.println("You may continue the registration process or quit.");
         System.out.println("Please select from the following options:");
@@ -447,6 +452,7 @@ public class Database {
         System.out.println("-----------------------------------------");
     }
 
+    // Displays options when login fails
     public static void displayLoginOptionsAfterUserNotFound() {
         System.out.println("You may continue the login process or quit.");
         System.out.println("Please select from the following options:");

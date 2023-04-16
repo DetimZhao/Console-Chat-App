@@ -6,20 +6,20 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Welcome to the Chat App!\n");
         Database.databaseMain(); // Connect to db
-        userDecision(); // lets user pick option
+        initialViewUserDecision(); // lets user pick option for initial view
     }
 
-    // Prints the general options for user
-    public static void displayMenu() {
+    // Prints the options for user in initial view
+    public static void displayInitialMenu() {
         System.out.println("Please select from the following options:");
         System.out.println("(R)egister, (L)ogin, (Q)uit");
         System.out.println("-----------------------------------------");
     }
 
-    // Displays the options and handles the user's option
-    public static void userDecision() {
+    // Displays the options and handles the user's option for initial view
+    public static void initialViewUserDecision() {
         boolean validOption = false;
-        displayMenu();
+        displayInitialMenu();
         String userInput = input.nextLine();
         while(!validOption) {
             switch(userInput.toLowerCase()) {
@@ -39,7 +39,7 @@ public class Main {
                     break;
                 default:
                     System.out.println("Invalid! Try again.\n");
-                    displayMenu();
+                    displayInitialMenu();
                     userInput = input.nextLine();
                     continue;
             }
@@ -47,5 +47,9 @@ public class Main {
         }
     }
 
+    // Displays the options and handles user's option for main view
+    public static void mainViewUserDecision() {
+
+    }
 
 }
