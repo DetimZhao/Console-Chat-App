@@ -5,7 +5,7 @@ public class Main {
     static Scanner input = new Scanner(System.in);
     public static void main(String[] args) {
         System.out.println("Welcome to the Chat App!\n");
-        Database.databaseMain(); // Connect to db
+        Database.connectToDB(); // Connect to db
         initialViewUserDecision(); // lets user pick option for initial view
     }
 
@@ -26,12 +26,12 @@ public class Main {
                 case "r", "register":
                     System.out.println("r or register");
                     Database.isRegister(); // sets isRegister to true in Database class
-                    Database.databaseMain();
+                    Database.userRegister();
                     break;
                 case "l", "login":
                     System.out.println("l or login");
                     Database.isLogin(); // sets isLogin to true in Database class
-                    Database.databaseMain();
+                    Database.userLogin();
                     break;
                 case "q", "quit":
                     System.out.println("Quitting Program.");

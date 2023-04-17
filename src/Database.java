@@ -1,8 +1,10 @@
+import javax.swing.plaf.nimbus.State;
 import javax.xml.transform.Result;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.Scanner;
 
 /*
@@ -14,9 +16,18 @@ Allows user to login
 
 public class Database {
 
+    private static final String DB_URL = "jdbc:postgresql://localhost:5432/testdb";
+    private static final String DB_USER = "postgres";
+    private static final String DB_PASSWORD = "temp";
+
+    private static Connection c = null;
+    private static Statement stmt = null;
+    private static ResultSet rs = null;
+
     private static boolean isRegister = false;
     private static boolean isLogin = false;
     static Scanner input = new Scanner(System.in);
+
 
 
 //    public static void main(String[] args) {
@@ -207,42 +218,61 @@ public class Database {
 
 //    }
 
-    /*
-    Connection to Database
-    Registers the user
-    Lets the user login
-    ...
-     */
-    public static void databaseMain() {
-
-        Connection c = null;
-        Statement stmt = null;
+    public static void connectToDB() {
+//        Connection c = null;
+//        Statement stmt = null;
 
         // Connect to database
         try {
             Class.forName("org.postgresql.Driver");
             /*
             - for connection url, the last part is the database to connect to
-            - "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
+            -> "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
             - default user/username is postgres
             - password is the one set during installation and setup
              */
-            c = DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5432/testdb",
-                    "postgres", "temp");
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             System.out.println("-> Connected to Database.");
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
+    }
 
-        /*
-        Makes table to store register info
-        Takes in user's username and password and adds it to psl query that is added to table
-        ...
-         */
-        if(isRegister) {
+    // Makes isRegister var true
+    public static void isRegister() {
+        isRegister = true;
+    }
+
+    // Makes isLogin var true
+    public static void isLogin() {
+        isLogin = true;
+    }
+
+    // Prompts user for a message (username and password) and returns a string
+    public static String promptMessageForUser(String promptMessage) {
+        System.out.print(promptMessage);
+        return input.nextLine();
+    }
+
+    // Displays options when register fails
+    public static void displayRegistrationOptionsAfterFailure() {
+        System.out.println("You may continue the registration process or quit.");
+        System.out.println("Please select from the following options:");
+        System.out.println("(C)ontinue, (Q)uit");
+        System.out.println("-----------------------------------------");
+    }
+
+    /*
+    Registers the user
+    Creates data table to store info if it doesn't exist
+    Prompts user to register a username and password
+    Checks if username is unique
+     */
+    public static void userRegister() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             // Make table to store user info (if it doesn't already exist)
             try {
                 stmt = c.createStatement();
@@ -273,10 +303,10 @@ public class Database {
             try {
                 boolean registerSuccessful = false;
                 c.setAutoCommit(false); // Allows commits to the db
-                while(!registerSuccessful) {
+                while (!registerSuccessful) {
                     stmt = c.createStatement();
-                    String username = promptRegisterForUser("Enter a username: ");
-                    String password = promptRegisterForUser("Enter a password: ");
+                    String username = promptMessageForUser("Enter a username: ");
+                    String password = promptMessageForUser("Enter a password: ");
                     String sql = "INSERT INTO userinfo " +
                             "(username, password) " +
                             "VALUES (" + "'" + username + "'" + "," + "'" + password + "'" + "); ";
@@ -303,7 +333,7 @@ public class Database {
                         // Prompts user to continue to register or to quit
                         while (!continueRegistration) {
                             userRegisterInput = input.nextLine();
-                            switch(userRegisterInput.toLowerCase()) {
+                            switch (userRegisterInput.toLowerCase()) {
                                 case "q", "quit":
                                     System.out.println("Quitting Program.");
                                     System.exit(0);
@@ -341,20 +371,37 @@ public class Database {
                     }
                 }
             }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
         }
+    }
 
-        /*
-        Takes in username and password
-        Checks if username/user exists in database, and whether their password is correct
-         */
-        if(isLogin) {
-            ResultSet rs = null;
+    // Displays options when login fails
+    public static void displayLoginOptionsAfterUserNotFound() {
+        System.out.println("You may continue the login process or quit.");
+        System.out.println("Please select from the following options:");
+        System.out.println("(C)ontinue, (Q)uit");
+        System.out.println("-----------------------------------------");
+    }
+
+    /*
+    Lets user login
+    Checks for username in data table
+    If username exists, then check the input password to the one stored in the data table
+    Otherwise, prompt them to try again or quit program
+     */
+    public static void userLogin() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
                 boolean loginSucessful = false;
-                while(!loginSucessful) {
+                while (!loginSucessful) {
                     stmt = c.createStatement();
-                    String loginUsername = promptRegisterForUser("Enter your username: ");
-                    String loginPassword = promptRegisterForUser("Enter your password: ");
+                    String loginUsername = promptMessageForUser("Enter your username: ");
+                    String loginPassword = promptMessageForUser("Enter your password: ");
                     rs = stmt.executeQuery("SELECT * FROM userinfo WHERE username = "
                             + "'" + loginUsername + "'" + "; "); // Try to find user with query
                     try {
@@ -399,9 +446,9 @@ public class Database {
                 }
 
             } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
             } finally {
                 if (rs != null) {
                     try {
@@ -425,41 +472,13 @@ public class Database {
                     }
                 }
             }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
         }
     }
-
-    // Makes isRegister var true
-    public static void isRegister() {
-        isRegister = true;
-    }
-
-    // Makes isLogin var true
-    public static void isLogin() {
-        isLogin = true;
-    }
-
-    // Prompts user for a message (username and password) and returns a string
-    public static String promptRegisterForUser(String promptMessage) {
-        System.out.print(promptMessage);
-        return input.nextLine();
-    }
-
-    // Displays options when register fails
-    public static void displayRegistrationOptionsAfterFailure() {
-        System.out.println("You may continue the registration process or quit.");
-        System.out.println("Please select from the following options:");
-        System.out.println("(C)ontinue, (Q)uit");
-        System.out.println("-----------------------------------------");
-    }
-
-    // Displays options when login fails
-    public static void displayLoginOptionsAfterUserNotFound() {
-        System.out.println("You may continue the login process or quit.");
-        System.out.println("Please select from the following options:");
-        System.out.println("(C)ontinue, (Q)uit");
-        System.out.println("-----------------------------------------");
-    }
-
 
 
 
