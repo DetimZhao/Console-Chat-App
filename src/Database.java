@@ -1,10 +1,7 @@
-import javax.swing.plaf.nimbus.State;
-import javax.xml.transform.Result;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Collection;
 import java.util.Scanner;
 
 /*
@@ -24,13 +21,19 @@ public class Database {
     private static Statement stmt = null;
     private static ResultSet rs = null;
 
-    private static boolean isRegister = false;
-    private static boolean isLogin = false;
+    private static boolean registerSuccessful = false;
+    private static boolean loginSuccessful = false;
     static Scanner input = new Scanner(System.in);
 
+    public static boolean isRegisterSuccessful() {
+        return registerSuccessful;
+    }
 
+    public static boolean isLoginSuccessful() {
+        return loginSuccessful;
+    }
 
-//    public static void main(String[] args) {
+    //    public static void main(String[] args) {
 
 //        Connection c = null;
 //        Statement stmt = null;
@@ -218,6 +221,10 @@ public class Database {
 
 //    }
 
+    /*
+    Makes connection to database
+    Assigns Connection c to the connection url, user, and password
+     */
     public static void connectToDB() {
 //        Connection c = null;
 //        Statement stmt = null;
@@ -240,16 +247,6 @@ public class Database {
         }
     }
 
-    // Makes isRegister var true
-    public static void isRegister() {
-        isRegister = true;
-    }
-
-    // Makes isLogin var true
-    public static void isLogin() {
-        isLogin = true;
-    }
-
     // Prompts user for a message (username and password) and returns a string
     public static String promptMessageForUser(String promptMessage) {
         System.out.print(promptMessage);
@@ -258,7 +255,7 @@ public class Database {
 
     // Displays options when register fails
     public static void displayRegistrationOptionsAfterFailure() {
-        System.out.println("You may continue the registration process or quit.");
+        System.out.println("You may try to register again or quit.\n");
         System.out.println("Please select from the following options:");
         System.out.println("(C)ontinue, (Q)uit");
         System.out.println("-----------------------------------------");
@@ -301,7 +298,7 @@ public class Database {
 
             // Prompt user to register username and password, adds input to table
             try {
-                boolean registerSuccessful = false;
+//                boolean registerSuccessful = false;
                 c.setAutoCommit(false); // Allows commits to the db
                 while (!registerSuccessful) {
                     stmt = c.createStatement();
@@ -355,34 +352,36 @@ public class Database {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
-            } finally {
-                if (stmt != null) {
-                    try {
-                        stmt.close();
-                    } catch (Exception e) {
-                        // Exception
-                    }
-                }
-                if (c != null) {
-                    try {
-                        c.close();
-                    } catch (Exception e) {
-                        // Exception
-                    }
-                }
             }
         } catch (Exception e) {
             System.out.println("-> Connection Failed.");
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
         }
     }
 
     // Displays options when login fails
     public static void displayLoginOptionsAfterUserNotFound() {
-        System.out.println("You may continue the login process or quit.");
+//        System.out.println("You may try to login again, register an account, or quit.\n");
+        System.out.println("You may try to login again or quit.\n");
         System.out.println("Please select from the following options:");
+//        System.out.println("(C)ontinue, (R)egister, (Q)uit");
         System.out.println("(C)ontinue, (Q)uit");
         System.out.println("-----------------------------------------");
     }
@@ -397,8 +396,8 @@ public class Database {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
-                boolean loginSucessful = false;
-                while (!loginSucessful) {
+//                boolean loginSuccessful = false;
+                while (!loginSuccessful) {
                     stmt = c.createStatement();
                     String loginUsername = promptMessageForUser("Enter your username: ");
                     String loginPassword = promptMessageForUser("Enter your password: ");
@@ -408,10 +407,10 @@ public class Database {
                         if (rs.next()) { // If there is another row, then means user is found
                             String dbPassword = rs.getString("password");
                             if (loginPassword.equals(dbPassword)) { // Check if input password equals stored password
-                                System.out.println("Login successful...\n");
-                                loginSucessful = true;
+                                System.out.println("\nLogin successful!\n");
+                                loginSuccessful = true;
                             } else {
-                                System.out.println("Incorrect password... Try Again.\n");
+                                System.out.println("\nIncorrect password... Try Again.\n");
                             }
                         } else { // If the user is not found, either username is wrong or it doesn't exist
                             System.out.println("\nUser not found. Username may be incorrect or does not exist.");
@@ -429,6 +428,10 @@ public class Database {
                                     case "c", "continue":
                                         System.out.println("Continuing Login...\n");
                                         break;
+//                                    case "r", "register":
+//                                        System.out.println("Register an account...\n");
+//                                        userRegister();
+//                                        break;
                                     default:
                                         System.out.println("Invalid! Try again.\n");
                                         displayLoginOptionsAfterUserNotFound();
@@ -449,34 +452,34 @@ public class Database {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
-            } finally {
-                if (rs != null) {
-                    try {
-                        rs.close();
-                    } catch (Exception e) {
-                        // Exception
-                    }
-                }
-                if (stmt != null) {
-                    try {
-                        stmt.close();
-                    } catch (Exception e) {
-                        // Exception
-                    }
-                }
-                if (c != null) {
-                    try {
-                        c.close();
-                    } catch (Exception e) {
-                        // Exception
-                    }
-                }
             }
         } catch (Exception e) {
             System.out.println("-> Connection Failed.");
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (Exception e) {
+                    // Exception
+                }
+            }
         }
     }
 
