@@ -7,7 +7,7 @@ import java.util.Scanner;
 /*
 Database class focuses primarily on implementing and handling anything related to the psql database
 Registers the user
-Allows user to login
+Allows user to log in
 ...
  */
 
@@ -378,8 +378,8 @@ public class Database {
 
     // Displays options when login fails
     public static void displayLoginOptionsAfterUserNotFound() {
-//        System.out.println("You may try to login again, register an account, or quit.\n");
-        System.out.println("You may try to login again or quit.\n");
+//        System.out.println("You may try to log in again, register an account, or quit.\n");
+        System.out.println("You may try to log in again or quit.\n");
         System.out.println("Please select from the following options:");
 //        System.out.println("(C)ontinue, (R)egister, (Q)uit");
         System.out.println("(C)ontinue, (Q)uit");
@@ -387,7 +387,7 @@ public class Database {
     }
 
     /*
-    Lets user login
+    Lets user log in
     Checks for username in data table
     If username exists, then check the input password to the one stored in the data table
     Otherwise, prompt them to try again or quit program
@@ -417,7 +417,7 @@ public class Database {
                             displayLoginOptionsAfterUserNotFound();
                             boolean continueLogin = false;
                             String userLoginInput;
-                            // Prompts user to continue to login or to quit
+                            // Prompts user to continue to log in or to quit
                             while (!continueLogin) {
                                 userLoginInput = input.nextLine();
                                 switch (userLoginInput.toLowerCase()) {
@@ -440,7 +440,7 @@ public class Database {
                                 continueLogin = true;
                             }
                         }
-                        System.out.println("-> Trying to find login from user. Done.\n");
+                        System.out.println("-> Trying to find login from user. Complete.\n");
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -483,6 +483,65 @@ public class Database {
         }
     }
 
+    public static void displayUpdateAccountOptions() {
+        System.out.println("To update your username or password,");
+        System.out.println("Please select from the following options:");
+        System.out.println("(U)sername, (P)assword");
+        System.out.println("-----------------------------------------");
+    }
+
+    public static void updateAccountInfo() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            boolean validUpdateAccOption = false;
+            String userUpdateAccInput;
+                while(!validUpdateAccOption) {
+                    try {
+                        c.setAutoCommit(false);
+                        stmt = c.createStatement();
+                        displayUpdateAccountOptions();
+                        userUpdateAccInput = input.nextLine();
+                        switch (userUpdateAccInput.toLowerCase()) {
+                            case "u", "username":
+                                String oldUsername = promptMessageForUser("Enter your old username: ");
+                                String newUsername = promptMessageForUser("Enter your new username: ");
+                                String updateUsername = "UPDATE userinfo SET username = " + "'" + newUsername + "'"
+                                        + " WHERE username = " + "'" + oldUsername + "';";
+                                stmt.executeUpdate(updateUsername);
+                                break;
+                            case "p", "password":
+                                String currUsername = promptMessageForUser("Enter your username: ");
+                                String oldPassword = promptMessageForUser("Enter your old password: ");
+                                String newPassword = promptMessageForUser("Enter your new password: ");
+                                // Makes sure to only change the password of a specific user
+                                String updatePassword = "UPDATE userinfo SET password = " + "'" + newPassword + "'"
+                                        + " WHERE password = " + "'" + oldPassword + "'"
+                                        + " AND username = " + "'" + currUsername + "'";
+                                stmt.executeUpdate(updatePassword);
+                                break;
+                            default:
+                                System.out.println("Invalid! Try again.\n");
+                                displayUpdateAccountOptions();
+                                continue;
+                        }
+                        validUpdateAccOption = true;
+                        System.out.println("-> Attempt to change username or password is complete.\n");
+                        c.commit();
+                        printAllElementsFromUserinfo();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                        System.exit(0);
+                    }
+                }
+            } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
 
 
     /*finally {
@@ -510,16 +569,20 @@ public class Database {
         }*/
 
     // Print out all the data from userinfo.
-    /*
-    rs = stmt.executeQuery("SELECT * FROM userinfo;");
-                while(rs.next()) {
-                    String dbUsername = rs.getString("username");
-                    String dbPassword = rs.getString("password");
+    public static void printAllElementsFromUserinfo() {
+        try {
+            rs = stmt.executeQuery("SELECT * FROM userinfo;");
+            while (rs.next()) {
+                String dbUsername = rs.getString("username");
+                String dbPassword = rs.getString("password");
 
-                    System.out.println("Username " + dbUsername);
-                    System.out.println("Password " + dbPassword);
-                }
-                System.out.println("Printing out all info from userinfo. Done. ");
-     */
-
+                System.out.println("Username: " + dbUsername);
+                System.out.println("Password: " + dbPassword);
+                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~");
+            }
+            System.out.println("\n-> Printing out all info from userinfo. Done. \n");
+        } catch (Exception e) {
+            System.out.println("Failed to print all elements from userinfo");
+        }
+    }
 }

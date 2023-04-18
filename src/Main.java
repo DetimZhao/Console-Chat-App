@@ -75,9 +75,11 @@ public class Main {
                     break;
                 case "a", "account":
                     System.out.println("a or account");
+                    Database.updateAccountInfo();
                     break;
                 case "l", "logout":
                     System.out.println("l or logout");
+                    initialViewUserDecision(); // Go back to initial view
                     break;
                 default:
                     System.out.println("Invalid! Try again.\n");
