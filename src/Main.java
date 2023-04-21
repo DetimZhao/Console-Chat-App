@@ -1,3 +1,4 @@
+import javax.xml.crypto.Data;
 import java.util.Scanner;
 
 public class Main {
@@ -29,13 +30,11 @@ public class Main {
         while(!validOption) {
             switch(userInput.toLowerCase()) {
                 case "r", "register":
-                    System.out.println("r or register");
-//                    Database.isRegister(); // sets isRegister to true in Database class
+                    System.out.println("\n-r or register");
                     Database.userRegister();
                     break;
                 case "l", "login":
-                    System.out.println("l or login");
-//                    Database.isLogin(); // sets isLogin to true in Database class
+                    System.out.println("\n-l or login");
                     Database.userLogin(); // Calls on database login
                     mainViewUserDecision();
                     break;
@@ -68,17 +67,20 @@ public class Main {
         while(!validOption) {
             switch(userInput.toLowerCase()) {
                 case "j", "join":
-                    System.out.println("j or join");
+                    System.out.println("\n-j or join");
                     break;
                 case "c", "create":
-                    System.out.println("r or create");
+                    System.out.println("\n-r or create");
+                    Database.createChatRoom();
                     break;
                 case "a", "account":
-                    System.out.println("a or account");
+                    System.out.println("\n-a or account");
                     Database.updateAccountInfo();
+                    mainViewUserDecision();
                     break;
                 case "l", "logout":
-                    System.out.println("l or logout");
+                    System.out.println("\n-l or logout");
+                    System.out.println("You have been logged out.\n");
                     initialViewUserDecision(); // Go back to initial view
                     break;
                 default:

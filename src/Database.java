@@ -23,6 +23,8 @@ public class Database {
 
     private static boolean registerSuccessful = false;
     private static boolean loginSuccessful = false;
+    private static String loginUsername;
+    private static String loginPassword;
     static Scanner input = new Scanner(System.in);
 
     public static boolean isRegisterSuccessful() {
@@ -31,6 +33,18 @@ public class Database {
 
     public static boolean isLoginSuccessful() {
         return loginSuccessful;
+    }
+
+    public static String getLoginUsername() {
+        return loginUsername;
+    }
+
+    public static String getLoginPassword() {
+        return loginPassword;
+    }
+
+    public static void updateLoginUsername(String newUsername) {
+        loginUsername = newUsername;
     }
 
     //    public static void main(String[] args) {
@@ -399,15 +413,17 @@ public class Database {
 //                boolean loginSuccessful = false;
                 while (!loginSuccessful) {
                     stmt = c.createStatement();
-                    String loginUsername = promptMessageForUser("Enter your username: ");
-                    String loginPassword = promptMessageForUser("Enter your password: ");
+//                    String loginUsername = promptMessageForUser("Enter your username: ");
+//                    String loginPassword = promptMessageForUser("Enter your password: ");
+                    loginUsername = promptMessageForUser("Enter your username: ");
+                    loginPassword = promptMessageForUser("Enter your password: ");
                     rs = stmt.executeQuery("SELECT * FROM userinfo WHERE username = "
                             + "'" + loginUsername + "'" + "; "); // Try to find user with query
                     try {
                         if (rs.next()) { // If there is another row, then means user is found
                             String dbPassword = rs.getString("password");
                             if (loginPassword.equals(dbPassword)) { // Check if input password equals stored password
-                                System.out.println("\nLogin successful!\n");
+                                System.out.println("\nLogin successful! Welcome " + getLoginUsername() + "!\n");
                                 loginSuccessful = true;
                             } else {
                                 System.out.println("\nIncorrect password... Try Again.\n");
@@ -503,21 +519,24 @@ public class Database {
                         userUpdateAccInput = input.nextLine();
                         switch (userUpdateAccInput.toLowerCase()) {
                             case "u", "username":
-                                String oldUsername = promptMessageForUser("Enter your old username: ");
+//                                String oldUsername = promptMessageForUser("Enter your old username: ");
                                 String newUsername = promptMessageForUser("Enter your new username: ");
                                 String updateUsername = "UPDATE userinfo SET username = " + "'" + newUsername + "'"
-                                        + " WHERE username = " + "'" + oldUsername + "';";
+                                        + " WHERE username = " + "'" + getLoginUsername() + "';";
                                 stmt.executeUpdate(updateUsername);
+                                updateLoginUsername(newUsername); // Make sure to update username since it has changed
+                                System.out.println("Username Changed.");
                                 break;
                             case "p", "password":
-                                String currUsername = promptMessageForUser("Enter your username: ");
-                                String oldPassword = promptMessageForUser("Enter your old password: ");
+//                                String currUsername = promptMessageForUser("Enter your username: ");
+//                                String oldPassword = promptMessageForUser("Enter your old password: ");
                                 String newPassword = promptMessageForUser("Enter your new password: ");
                                 // Makes sure to only change the password of a specific user
                                 String updatePassword = "UPDATE userinfo SET password = " + "'" + newPassword + "'"
-                                        + " WHERE password = " + "'" + oldPassword + "'"
-                                        + " AND username = " + "'" + currUsername + "'";
+                                        + " WHERE password = " + "'" + getLoginPassword() + "'"
+                                        + " AND username = " + "'" + getLoginUsername() + "'";
                                 stmt.executeUpdate(updatePassword);
+                                System.out.println("Password Changed.");
                                 break;
                             default:
                                 System.out.println("Invalid! Try again.\n");
@@ -527,7 +546,7 @@ public class Database {
                         validUpdateAccOption = true;
                         System.out.println("-> Attempt to change username or password is complete.\n");
                         c.commit();
-                        printAllElementsFromUserinfo();
+//                        printAllElementsFromUserinfo();
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -542,7 +561,70 @@ public class Database {
         }
     }
 
+    public static void createChatRoom() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+                stmt = c.createStatement();
+                String sql = "CREATE TABLE IF NOT EXISTS chat_messages " +
+                        "(id SERIAL PRIMARY KEY, " +
+                        "chat_room_name VARCHAR(50) NOT NULL, " +
+                        "username VARCHAR(50) UNIQUE NOT NULL, " +
+                        "message_content TEXT NOT NULL, " +
+                        "msg_sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, " +
+                        "CONSTRAINT chk_chat_room_name CHECK (chat_room_name ~ '^[a-z0-9]*$'));";
+                stmt.executeUpdate(sql);
+                stmt.close();
+                System.out.println("-> Attempt to make table has been completed.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
 
+            try {
+                boolean createChatRoomSuccessful = false;
+                c.setAutoCommit(false); // Allows commits to the db
+                while(!createChatRoomSuccessful) {
+                    stmt = c.createStatement();
+                    String createRoomName = promptMessageForUser("Enter a name for the Chat Room: ");
+                    String sql = "INSERT INTO chat_messages " +
+                            "(chat_room_name, username) " +
+                            "VALUES (" + "'" + createRoomName + "'" + "," + "'" + getLoginUsername() + "'" + "); ";
+                    try {
+                        int rowsInserted = stmt.executeUpdate(sql);
+                        if (rowsInserted == 1) { // Check if rows of table increased
+                            System.out.println("\nCreated Chat Room.\n");
+                            createChatRoomSuccessful = true;
+                        }
+
+                    } catch (Exception e) {
+                        System.out.println("\nCreating Chat Room failed.\n");
+                        System.out.println("Error for Chat Room: " + e.getMessage());
+                        System.out.println("-----------------------------------------\n");
+                        System.out.println("Your name cannot contain uppercase letters or weird characters.");
+                    }
+                }
+                c.commit();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+
+    public static void joinChatRoom() {
+        System.out.println("Enter the name of the room you would like to join: "); // Prompt user to join room
+        // TODO join the chatroom and add /slash commands
+    }
 
     /*finally {
             if (rs != null) {
