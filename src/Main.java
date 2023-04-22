@@ -8,7 +8,7 @@ public class Main {
         System.out.println("Welcome to the Chat App!\n");
         Database.connectToDB(); // Connect to db
         initialViewUserDecision(); // lets user pick option for initial view
-        if(Database.isRegisterSuccessful()) {
+        if(Database.isRegisterSuccessful()) { // if register is successful, prompt login
             System.out.println("You can now login.\n");
             Database.userLogin();
         }
@@ -36,7 +36,6 @@ public class Main {
                 case "l", "login":
                     System.out.println("\n-l or login");
                     Database.userLogin(); // Calls on database login
-//                    mainViewUserDecision();
                     break;
                 case "q", "quit":
                     System.out.println("Quitting Program.");
