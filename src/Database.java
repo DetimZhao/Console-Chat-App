@@ -261,7 +261,7 @@ public class Database {
         }
     }
 
-    // Prompts user for a message (username and password) and returns a string
+    // Prompts user for a message (whether it be username, password, etc.) and returns a string
     public static String promptMessageForUser(String promptMessage) {
         System.out.print(promptMessage);
         return input.nextLine();
@@ -499,6 +499,7 @@ public class Database {
         }
     }
 
+    // Display options to update Account
     public static void displayUpdateAccountOptions() {
         System.out.println("To update your username or password,");
         System.out.println("Please select from the following options:");
@@ -506,6 +507,7 @@ public class Database {
         System.out.println("-----------------------------------------");
     }
 
+    // Updates the username or password of user
     public static void updateAccountInfo() {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -561,6 +563,10 @@ public class Database {
         }
     }
 
+    /*
+     Make a data table to store chat room name, username, message, and message timestamp
+     ...
+     */
     public static void createChatRoom() {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -568,9 +574,9 @@ public class Database {
                 stmt = c.createStatement();
                 String sql = "CREATE TABLE IF NOT EXISTS chat_messages " +
                         "(id SERIAL PRIMARY KEY, " +
-                        "chat_room_name VARCHAR(50) NOT NULL, " +
-                        "username VARCHAR(50) UNIQUE NOT NULL, " +
-                        "message_content TEXT NOT NULL, " +
+                        "chat_room_name VARCHAR(50) UNIQUE NOT NULL, " +
+                        "username VARCHAR(50) NOT NULL, " +
+                        "message_content TEXT NOT NULL DEFAULT ''," +
                         "msg_sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, " +
                         "CONSTRAINT chk_chat_room_name CHECK (chat_room_name ~ '^[a-z0-9]*$'));";
                 stmt.executeUpdate(sql);
@@ -596,6 +602,7 @@ public class Database {
                         if (rowsInserted == 1) { // Check if rows of table increased
                             System.out.println("\nCreated Chat Room.\n");
                             createChatRoomSuccessful = true;
+                            System.out.println("Welcome to " + "\"" + createRoomName + "\" " + "(/help for commands)");
                         }
 
                     } catch (Exception e) {
@@ -603,6 +610,8 @@ public class Database {
                         System.out.println("Error for Chat Room: " + e.getMessage());
                         System.out.println("-----------------------------------------\n");
                         System.out.println("Your name cannot contain uppercase letters or weird characters.");
+                        System.out.println("Or the chat room name already exists. Try again. ");
+                        c.rollback(); // Rollback changes if an error occurs
                     }
                 }
                 c.commit();
@@ -612,6 +621,8 @@ public class Database {
                 System.exit(0);
             }
 
+            // TODO Add chat view
+
         } catch (Exception e) {
             System.out.println("-> Connection Failed.");
             e.printStackTrace();
@@ -620,10 +631,67 @@ public class Database {
         }
     }
 
-
     public static void joinChatRoom() {
-        System.out.println("Enter the name of the room you would like to join: "); // Prompt user to join room
-        // TODO join the chatroom and add /slash commands
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+                boolean joinChatRoomSuccessful = false;
+                stmt = c.createStatement();
+                while(!joinChatRoomSuccessful) {
+                    String joinChatRoomName = promptMessageForUser("Enter the name of the chat room you want to join: ");
+                    rs = stmt.executeQuery("SELECT * FROM chat_messages WHERE chat_room_name = "
+                            + "'" + joinChatRoomName + "'" + "; "); // Try to find chat room with query
+                    try {
+                        if (rs.next()) { // If there is another row, then means chat room is found
+                            System.out.println("Welcome to " + "\"" + joinChatRoomName + "\" " + "(/help for commands)");
+                            joinChatRoomSuccessful = true;
+                        }
+                        else {
+                            System.out.println("Failed to join chat room.");
+                            System.out.println("Name may be incorrect or it does not exist. Try again.\n");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                        System.exit(0);
+                    }
+                    // TODO join the chatroom and add /slash command
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+    public static void chatView() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+
+            } catch (Exception e) {
+
+            }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+    // Displays all the help commands
+    public static void displaySlashCommands() {
+        System.out.println("/list (Return a list of users currently in this chat room.)");
+        System.out.println("/leave (Exits the chat room.)");
+        System.out.println("/history (Print all the past messages for the room.)");
+        System.out.println("/help (Show this list.)");
     }
 
     /*finally {

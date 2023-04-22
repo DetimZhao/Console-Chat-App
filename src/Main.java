@@ -36,7 +36,7 @@ public class Main {
                 case "l", "login":
                     System.out.println("\n-l or login");
                     Database.userLogin(); // Calls on database login
-                    mainViewUserDecision();
+//                    mainViewUserDecision();
                     break;
                 case "q", "quit":
                     System.out.println("Quitting Program.");
@@ -68,6 +68,7 @@ public class Main {
             switch(userInput.toLowerCase()) {
                 case "j", "join":
                     System.out.println("\n-j or join");
+                    Database.joinChatRoom();
                     break;
                 case "c", "create":
                     System.out.println("\n-r or create");
