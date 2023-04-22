@@ -565,13 +565,19 @@ public class Database {
 
     /*
      Make a data table to store chat room name, username, message, and message timestamp
-     ...
+     Inserts the name of the chat room into the data table, ensures it is only lowercase and digits
+     Gives error when the chatroom already exists or if it includes uppercase letters or weird characters
      */
     public static void createChatRoom() {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
                 stmt = c.createStatement();
+                /*
+                - message_content has Default value of ' ' when chatroom is made, so it can be filtered later
+                - message also includes timestamp with CURRENT_TIMESTAMP
+                - checks constraint of chat room name through regex of lowercase and digits
+                 */
                 String sql = "CREATE TABLE IF NOT EXISTS chat_messages " +
                         "(id SERIAL PRIMARY KEY, " +
                         "chat_room_name VARCHAR(50) UNIQUE NOT NULL, " +
@@ -631,6 +637,11 @@ public class Database {
         }
     }
 
+    /*
+    Prompts user for chat room name
+    Tries to find the chat room name through query
+    If it is found, then automatically join other. Otherwise, give error that the name is wrong, or it doesn't exist
+     */
     public static void joinChatRoom() {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -655,7 +666,48 @@ public class Database {
                         System.err.println(e.getClass().getName() + ": " + e.getMessage());
                         System.exit(0);
                     }
-                    // TODO join the chatroom and add /slash command
+                }
+                // TODO join the chatroom and add /slash command
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+    /*
+    Handles user input and checks if it is a command or not
+    When it is a command, call on handleCommand to handle it
+    Otherwise, call on sendMessageToDatabase to save the message
+     */
+    public static void chatRoomView() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+                System.out.println("-----------------------------------------\n");
+                boolean leaveChatRoom = false;
+                while(true) { // Should be an infinite loop until /leave
+                    try {
+                        String userMsgInput = input.nextLine();
+                        if (userMsgInput.startsWith("/")) {
+                            // if true, then handle the command
+                            handleCommand(userMsgInput);
+                        } else {
+                            // consider input as a full message and send to database
+                            sendMessageToDatabase(userMsgInput);
+                            // TODO make method to save message in db
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                        System.exit(0);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -670,13 +722,16 @@ public class Database {
         }
     }
 
-    public static void chatView() {
+    // If it is not a command, the message will be stored in the database
+    public static void sendMessageToDatabase(String msgInput) {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
-
+                // TODO save messsage to db
             } catch (Exception e) {
-
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
             }
         } catch (Exception e) {
             System.out.println("-> Connection Failed.");
@@ -686,13 +741,95 @@ public class Database {
         }
     }
 
+    // Takes the message a user put and appropriately calls on the corresponding method to handle the command
+    public static void handleCommand(String msgInput) {
+        switch (msgInput) {
+            case "/list":
+                 listUsersInChatRoom();
+                break;
+            case "/leave":
+                 leaveChatRoom();
+                break;
+            case "/history":
+                displayChatHistory();
+                break;
+            case "/help":
+                displayHelpSlashCommands();
+                break;
+            default:
+                System.out.println("Unknown command. Try again.");
+        }
+    }
+
     // Displays all the help commands
-    public static void displaySlashCommands() {
+    public static void displayHelpSlashCommands() {
         System.out.println("/list (Return a list of users currently in this chat room.)");
         System.out.println("/leave (Exits the chat room.)");
         System.out.println("/history (Print all the past messages for the room.)");
         System.out.println("/help (Show this list.)");
     }
+
+    // Handles the /list command
+    public static void listUsersInChatRoom() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+                // TODO /list command
+                /*
+                must consider when users are active in the chatroom
+                if one leaves, data might need to be deleted or excluded
+                 */
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+    // Handles the /leave command
+    public static void leaveChatRoom() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+                // TODO /leave command
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+    // Handles the /history command
+    public static void displayChatHistory() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+                // TODO /history command
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
 
     /*finally {
             if (rs != null) {
@@ -718,7 +855,7 @@ public class Database {
             }
         }*/
 
-    // Print out all the data from userinfo.
+    // Print out all the data from userinfo
     public static void printAllElementsFromUserinfo() {
         try {
             rs = stmt.executeQuery("SELECT * FROM userinfo;");
@@ -733,6 +870,28 @@ public class Database {
             System.out.println("\n-> Printing out all info from userinfo. Done. \n");
         } catch (Exception e) {
             System.out.println("Failed to print all elements from userinfo");
+        }
+    }
+
+    // Print out all the data from chat_messages
+    public static void printAllElementsFromChatMessages() {
+        try {
+            rs = stmt.executeQuery("SELECT * FROM chat_messages;");
+            while (rs.next()) {
+                String dbRoomName = rs.getString("chat_room_name");
+                String dbUsername = rs.getString("username");
+                String dbMessage = rs.getString("message_content");
+                String dbMsgTimestamp = rs.getString("msg_sent_at");
+
+                System.out.println("Chat Room name: " + dbRoomName);
+                System.out.println("Username: " + dbUsername);
+                System.out.println("User's message: " + dbMessage);
+                System.out.println("Message Timestamp: " + dbMsgTimestamp);
+                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~");
+            }
+            System.out.println("\n-> Printing out all info from chat_messages. Done. \n");
+        } catch (Exception e) {
+            System.out.println("Failed to print all elements from chat_messages");
         }
     }
 }
