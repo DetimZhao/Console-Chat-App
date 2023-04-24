@@ -1,4 +1,3 @@
-import javax.xml.crypto.Data;
 import java.util.Scanner;
 
 public class Main {
@@ -12,7 +11,11 @@ public class Main {
             System.out.println("You can now login.\n");
             Database.userLogin();
         }
-        if(Database.isLoginSuccessful()) { mainViewUserDecision(); } // if login is successful, move to main view
+        while (true) {
+            if (Database.isLoginSuccessful() || Database.isLeaveChatRoom()) {
+                mainViewUserDecision(); // if login is successful or user leaves chat room, move to main view
+            }
+        }
     }
 
     // Prints the options for user in initial view
@@ -76,7 +79,7 @@ public class Main {
                 case "a", "account":
                     System.out.println("\n-a or account");
                     Database.updateAccountInfo();
-                    mainViewUserDecision();
+                    mainViewUserDecision(); // After updating account, show main view again
                     break;
                 case "l", "logout":
                     System.out.println("\n-l or logout");
