@@ -1,5 +1,10 @@
 import java.util.Scanner;
 
+/*
+Main handles the user's options and decisions and utilizes the Database class whenever it needs to.
+It displays the initial view or main view for the user depending on
+when the user is registered, logged in, or when they leave a chat room.
+ */
 public class Main {
 
     static Scanner input = new Scanner(System.in);
@@ -9,7 +14,6 @@ public class Main {
         initialViewUserDecision(); // lets user pick option for initial view
         while (true) {
             if(Database.isRegisterSuccessful()) { // if register is successful, prompt login
-                System.out.println("You can now login.\n");
                 Database.userLogin();
             }
             if (Database.isLoginSuccessful() || Database.isLeaveChatRoom()) {

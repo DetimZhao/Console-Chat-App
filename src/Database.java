@@ -5,13 +5,19 @@ import java.sql.Statement;
 import java.util.Scanner;
 
 /*
-Database class focuses primarily on implementing and handling anything related to the psql database
+Database class focuses primarily on implementing and handling anything related to the psql database:
 Registers the user and stores info in database
 Allows user to log in by adding their info to database
-Creates a chat room in database
-Joins a chat room in database
+Creates a chat room in database  (checks in place for if it works or if it contains uppercase and or weird characters)
+Joins a chat room in database (checks if the room exists and prompts the user when it doesn't)
 Checks if user input is a message or command, if it is a message it is saved to database otherwise handle the command
-Commands: /list (lists users), /leave (exits chat room), /history (displays chat room history), /help (prints commands)
+Commands: /list, /leave, /history, /help
+Stores user's username and chat room connection in database when attempting to add that user to database
+Updates whether user connection is active or not (dependent on when they leave)
+/list queries the database for connected users
+/leave updates the database for which user is connected and in what chat room
+/history queries and prints all past messages of a chat room
+/help prints out commands
  */
 
 public class Database {
@@ -60,202 +66,11 @@ public class Database {
         loginUsername = newUsername;
     }
 
-    //    public static void main(String[] args) {
-
-//        Connection c = null;
-//        Statement stmt = null;
-
-        // Connection to the db
-        /*try {
-            Class.forName("org.postgresql.Driver");
-            *//*
-            - for connection url, the last part is the database to connect to
-            - "jdbc:postgresql://localhost:5432/PutYourDbNameHere"
-            - default user/username is postgres
-            - password is the one set during installation and setup
-             *//*
-            c = DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5432/testdb",
-                    "postgres", "temp");
-            System.out.println("Connected to Database.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }*/
-
-        // Test to make table in sql
-/*          try {
-            stmt = c.createStatement();
-            String sql = "CREATE TABLE COMPANY " +
-                    "(ID INT PRIMARY KEY NOT NULL," +
-                    " NAME TEXT NOT NULL," +
-                    " ADDRESS CHAR(50), " +
-                    " SALARY REAL)";
-            stmt.executeUpdate(sql);
-            stmt.close();
-            System.out.println("Table has been created.");
-        }catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }*/
-
-        // Insert Data into table
-        /*try {
-            // Allows commits to the db
-            c.setAutoCommit(false);
-            stmt = c.createStatement();
-            // Query statement
-            String sql = "INSERT INTO COMPANY("
-                    + "ID, NAME, AGE, ADDRESS, SALARY) "
-                    + "VALUES(1, 'Mike', 37, 'California', 20000.0);";
-            stmt.executeLargeUpdate(sql);
-            sql = "INSERT INTO COMPANY("
-                    + "ID, NAME, AGE, ADDRESS, SALARY) "
-                    + "VALUES(2, 'Tina', 24, 'Arizona', 20000.0);";
-            stmt.executeLargeUpdate(sql);
-            sql = "INSERT INTO COMPANY("
-                    + "ID, NAME, AGE, ADDRESS, SALARY) "
-                    + "VALUES(3, 'Sam', 21, 'Washington', 20000.0);";
-            stmt.executeLargeUpdate(sql);
-            sql = "INSERT INTO COMPANY("
-                    + "ID, NAME, AGE, ADDRESS, SALARY) "
-                    + "VALUES(4, 'Jane', 47, 'New Mexico', 20000.0);";
-            stmt.executeLargeUpdate(sql);
-            sql = "INSERT INTO COMPANY("
-                    + "ID, NAME, AGE, ADDRESS, SALARY) "
-                    + "VALUES(5, 'John', 65, 'Texas', 20000.0);";
-            stmt.executeLargeUpdate(sql);
-
-            stmt.close();
-            c.commit();
-            c.close();
-            System.out.println("Added elements to the table");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }*/
-
-        // Select Data from table
-        /*try {
-            stmt = c.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM company;");
-
-            while(rs.next()) {
-                int id = rs.getInt("ID");
-                String name = rs.getString("name");
-                String address = rs.getString("address");
-                float salary = rs.getFloat("salary");
-                int age = rs.getInt("age");
-
-                System.out.println("ID: " + id);
-                System.out.println("Name: " + name);
-                System.out.println("Salary: " + salary);
-                System.out.println("Age: " + age);
-            }
-            System.out.println("Selecting and printing * from company. Done.");
-            System.out.println();
-
-            rs = stmt.executeQuery("SELECT name, age FROM company WHERE age < 30;");
-            while(rs.next()) {
-                String name = rs.getString("name");
-                int age = rs.getInt("age");
-
-                System.out.println("Name: " + name);
-                System.out.println("Age: " + age);
-            }
-
-            rs.close();
-            stmt.close();
-            c.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }*/
-
-        // Update Data from table
-        /*try {
-            c.setAutoCommit(false);
-            stmt = c.createStatement();
-            String sql = "UPDATE company SET salary = 30000.0 WHERE id = 3;";
-            stmt.executeUpdate(sql);
-            c.commit();
-
-            ResultSet rs = stmt.executeQuery("SELECT * FROM company;");
-
-            while(rs.next()) {
-                int id = rs.getInt("ID");
-                String name = rs.getString("name");
-                String address = rs.getString("address");
-                float salary = rs.getFloat("salary");
-                int age = rs.getInt("age");
-
-                System.out.println("ID: " + id);
-                System.out.println("Name: " + name);
-                System.out.println("Salary: " + salary);
-                System.out.println("Age: " + age);
-                System.out.println("\n");
-            }
-
-            rs.close();
-            stmt.close();
-            c.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }*/
-
-        // Delete Data in table
-        /*try {
-            c.setAutoCommit(false);
-            stmt = c.createStatement();
-            String sql = "DELETE FROM company WHERE id = 4;";
-            stmt.executeUpdate(sql);
-            c.commit();
-
-            ResultSet rs = stmt.executeQuery("SELECT * FROM company;");
-
-            while(rs.next()) {
-                int id = rs.getInt("ID");
-                String name = rs.getString("name");
-                String address = rs.getString("address");
-                float salary = rs.getFloat("salary");
-                int age = rs.getInt("age");
-
-                System.out.println("ID: " + id);
-                System.out.println("Name: " + name);
-                System.out.println("Salary: " + salary);
-                System.out.println("Age: " + age);
-                System.out.println("\n");
-            }
-
-            rs.close();
-            stmt.close();
-            c.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }*/
-
-//    }
-
     /*
     Makes connection to database
     Assigns Connection c to the connection url, user, and password
      */
     public static void connectToDB() {
-//        Connection c = null;
-//        Statement stmt = null;
-
         // Connect to database
         try {
             Class.forName("org.postgresql.Driver");
@@ -266,7 +81,7 @@ public class Database {
             - password is the one set during installation and setup
              */
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            System.out.println("-> Connected to Database.");
+//            System.out.println("-> Connected to Database.");
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -316,7 +131,7 @@ public class Database {
                         " password VARCHAR(255) NOT NULL)";
                 stmt.executeUpdate(sql);
                 stmt.close();
-                System.out.println("-> Attempt to make table has been completed.");
+//                System.out.println("-> Attempt to make table has been completed.");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -325,7 +140,7 @@ public class Database {
 
             // Prompt user to register username and password, adds input to table
             try {
-                registerSuccessful = false; // MIGHT NOT NEED THIS CHECK AGAIN?
+                registerSuccessful = false;
                 c.setAutoCommit(false); // Allows commits to the db
                 while (!registerSuccessful) {
                     stmt = c.createStatement();
@@ -334,12 +149,12 @@ public class Database {
                     String sql = "INSERT INTO userinfo " +
                             "(username, password) " +
                             "VALUES (" + "'" + username + "'" + "," + "'" + password + "'" + ");";
-//                stmt.executeLargeUpdate(sql);
                     // Check if there are any issues registering username
                     try {
                         int rowsInserted = stmt.executeUpdate(sql);
                         if (rowsInserted == 1) { // Check if rows of table increased
-                            System.out.println("\nUser registered successfully.\n");
+                            System.out.println("\nUser registered successfully.");
+                            System.out.println("You can now login.\n");
                             registerSuccessful = true;
                         }
                         /*
@@ -348,8 +163,8 @@ public class Database {
                          */
                     } catch (Exception e) {
                         System.out.println("\nUser registration failed.\n");
-                        System.out.println("Error inserting user: " + e.getMessage());
-                        System.out.println("-----------------------------------------\n");
+//                        System.out.println("Error inserting user: " + e.getMessage());
+//                        System.out.println("-----------------------------------------\n");
                         System.out.println("The username may already exist.");
                         displayRegistrationOptionsAfterFailure();
                         boolean continueRegistration = false;
@@ -385,31 +200,14 @@ public class Database {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
         }
     }
 
     // Displays options when login fails
     public static void displayLoginOptionsAfterUserNotFound() {
-//        System.out.println("You may try to log in again, register an account, or quit.\n");
-        System.out.println("You may try to log in again or quit.\n");
+        System.out.println("You may try to log in again, register an account, or quit.\n");
         System.out.println("Please select from the following options:");
-//        System.out.println("(C)ontinue, (R)egister, (Q)uit");
-        System.out.println("(C)ontinue, (Q)uit");
+        System.out.println("(C)ontinue, (R)egister, (Q)uit");
         System.out.println("-----------------------------------------");
     }
 
@@ -426,8 +224,6 @@ public class Database {
                 loginSuccessful = false;
                 while (!loginSuccessful) {
                     stmt = c.createStatement();
-//                    String loginUsername = promptMessageForUser("Enter your username: ");
-//                    String loginPassword = promptMessageForUser("Enter your password: ");
                     loginUsername = promptMessageForUser("Enter your username: ");
                     loginPassword = promptMessageForUser("Enter your password: ");
                     rs = stmt.executeQuery("SELECT * FROM userinfo WHERE username = "
@@ -438,6 +234,7 @@ public class Database {
                             if (loginPassword.equals(dbPassword)) { // Check if input password equals stored password
                                 System.out.println("\nLogin successful! Welcome " + getLoginUsername() + "!\n");
                                 loginSuccessful = true;
+                                registerSuccessful = false; // reset register process
                             } else {
                                 System.out.println("\nIncorrect password... Try Again.\n");
                             }
@@ -457,10 +254,10 @@ public class Database {
                                     case "c", "continue":
                                         System.out.println("Continuing Login...\n");
                                         break;
-//                                    case "r", "register":
-//                                        System.out.println("Register an account...\n");
-//                                        userRegister();
-//                                        break;
+                                    case "r", "register":
+                                        System.out.println("Register an account...\n");
+                                        userRegister();
+                                        break;
                                     default:
                                         System.out.println("Invalid! Try again.\n");
                                         displayLoginOptionsAfterUserNotFound();
@@ -469,7 +266,7 @@ public class Database {
                                 continueLogin = true;
                             }
                         }
-                        System.out.println("-> Trying to find login from user. Complete.\n");
+//                        System.out.println("-> Trying to find login from user. Complete.\n");
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -487,28 +284,6 @@ public class Database {
             e.printStackTrace();
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
         }
     }
 
@@ -534,7 +309,6 @@ public class Database {
                         userUpdateAccInput = input.nextLine();
                         switch (userUpdateAccInput.toLowerCase()) {
                             case "u", "username":
-//                                String oldUsername = promptMessageForUser("Enter your old username: ");
                                 String newUsername = promptMessageForUser("Enter your new username: ");
                                 String updateUsername = "UPDATE userinfo SET username = " + "'" + newUsername + "'"
                                         + " WHERE username = " + "'" + getLoginUsername() + "';";
@@ -543,8 +317,6 @@ public class Database {
                                 System.out.println("Username Changed.");
                                 break;
                             case "p", "password":
-//                                String currUsername = promptMessageForUser("Enter your username: ");
-//                                String oldPassword = promptMessageForUser("Enter your old password: ");
                                 String newPassword = promptMessageForUser("Enter your new password: ");
                                 // Makes sure to only change the password of a specific user
                                 String updatePassword = "UPDATE userinfo SET password = " + "'" + newPassword + "'"
@@ -559,7 +331,7 @@ public class Database {
                                 continue;
                         }
                         validUpdateAccOption = true;
-                        System.out.println("-> Attempt to change username or password is complete.\n");
+//                        System.out.println("-> Attempt to change username or password is complete.\n");
                         c.commit();
 //                        printAllElementsFromUserinfo();
                     } catch (Exception e) {
@@ -601,7 +373,7 @@ public class Database {
                         "CONSTRAINT chk_chat_room_name CHECK (chat_room_name ~ '^[a-z0-9]*$'));";
                 stmt.executeUpdate(sql);
                 stmt.close();
-                System.out.println("-> Attempt to make table has been completed.");
+//                System.out.println("-> Attempt to make table has been completed.");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -614,9 +386,6 @@ public class Database {
                 while(!createChatRoomSuccessful) {
                     stmt = c.createStatement();
                     String createRoomName = promptMessageForUser("Enter a name for the Chat Room: ");
-//                    String sql = "INSERT INTO chat_messages " +
-//                            "(chat_room_name, username) " +
-//                            "VALUES (" + "'" + createRoomName + "'" + "," + "'" + getLoginUsername() + "'" + "); ";
                     try {
                         // Use a new Statement object for the SELECT query
                         Statement selectStmt = c.createStatement();
@@ -639,8 +408,8 @@ public class Database {
                         }
                     } catch (Exception e) {
                         System.out.println("\nCreating Chat Room failed.\n");
-                        System.out.println("Error for Chat Room: " + e.getMessage());
-                        System.out.println("-----------------------------------------\n");
+//                        System.out.println("Error for Chat Room: " + e.getMessage());
+//                        System.out.println("-----------------------------------------\n");
                         System.out.println("Your name cannot contain uppercase letters or weird characters.");
                         c.rollback(); // Rollback changes if an error occurs
                         displayOptionsAfterCreateRoomFailed();
@@ -716,7 +485,7 @@ public class Database {
                             System.out.println("Welcome to " + "\"" + joinChatRoomName + "\" " + "(/help for commands)");
                         }
                         else {
-                            System.out.println("Failed to join chat room.");
+                            System.out.println("\nFailed to join chat room.");
                             System.out.println("Name may be incorrect or it does not exist. Try again.\n");
                         }
                     } catch (Exception e) {
@@ -798,7 +567,7 @@ public class Database {
                 stmt.executeUpdate(sql);
                 stmt.close();
                 c.commit();
-                c.close();
+//                c.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -827,7 +596,7 @@ public class Database {
                             "is_connected BOOLEAN NOT NULL DEFAULT true);";
                     stmt.executeUpdate(sql);
                     stmt.close();
-                    System.out.println("-> Attempt to make table has been completed.");
+//                    System.out.println("-> Attempt to make table has been completed.");
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -864,8 +633,10 @@ public class Database {
                                 "VALUES(" + "'" + getChatRoomName() + "'" + "," +
                                 "'" + getLoginUsername() + "'" + ");";
                         int rowsInserted = insertStmt.executeUpdate(sql);
-                        if (rowsInserted == 1) { // Check if rows of table increased
-                            System.out.println("\n-> username and chat room name added to connected_users\n");
+                        if (rowsInserted == 1) {
+                            // If rows of table increased, then username and chat room name has been properly added.
+                            // This if statement is intentionally empty - it is here for debugging purposes.
+//                            System.out.println("\n-> username and chat room name added to connected_users\n");
                         }
                         insertStmt.close();
                     }
@@ -924,13 +695,14 @@ public class Database {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
+                System.out.println();
                 stmt = c.createStatement();
                 rs = stmt.executeQuery("SELECT * FROM connected_users WHERE is_connected = true;");
                 while (rs.next()) {
                     String dbUsername = rs.getString("username");
                     System.out.println("-" + dbUsername);
                 }
-                System.out.println("\n-> Printing out all connected users. \n");
+//                System.out.println("\n-> Printing out all connected users. \n");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -987,13 +759,12 @@ public class Database {
                     String userMsg = rs.getString("message_content");
                     System.out.println("- " + dbUsername + ":> " + userMsg);
                 }
-                System.out.println("\n-> Printing out all connected users. \n");
+//                System.out.println("\n-> Printing out all connected users. \n");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
             }
-//            printAllElementsFromChatMessages(); // just for testing
         } catch (Exception e) {
             System.out.println("-> Connection Failed.");
             e.printStackTrace();
@@ -1002,32 +773,7 @@ public class Database {
         }
     }
 
-
-    /*finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (Exception e) {
-                    // Exception
-                }
-            }
-        }*/
-
-    // Print out all the data from userinfo
+    /*// Print out all the data from userinfo
     public static void printAllElementsFromUserinfo() {
         try {
             stmt = c.createStatement();
@@ -1070,5 +816,5 @@ public class Database {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
-    }
+    }*/
 }
