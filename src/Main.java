@@ -9,16 +9,24 @@ public class Main {
 
     static Scanner input = new Scanner(System.in);
     public static void main(String[] args) {
-        System.out.println("Welcome to the Chat App!\n");
-        Database.connectToDB(); // Connect to db
-        initialViewUserDecision(); // lets user pick option for initial view
-        while (true) {
-            if(Database.isRegisterSuccessful()) { // if register is successful, prompt login
-                Database.userLogin();
+        try {
+            System.out.println("Welcome to the Chat App!\n");
+            Database.connectToDB(); // Connect to db
+            initialViewUserDecision(); // lets user pick option for initial view
+            while (true) {
+                if (Database.isRegisterSuccessful()) { // if register is successful, prompt login
+                    Database.userLogin();
+                }
+                if (Database.isLoginSuccessful() || Database.isLeaveChatRoom()) {
+                    mainViewUserDecision(); // if login is successful or user leaves chat room, move to main view
+                }
             }
-            if (Database.isLoginSuccessful() || Database.isLeaveChatRoom()) {
-                mainViewUserDecision(); // if login is successful or user leaves chat room, move to main view
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        } finally {
+            Database.closeAllConnections(); // close the connections if they haven't already
         }
     }
 

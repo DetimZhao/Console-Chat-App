@@ -428,6 +428,7 @@ public class Database {
                                     break;
                                 case "j", "join":
                                     joinChatRoom();
+                                    createChatRoomSuccessful = true;
                                     break;
                                 default:
                                     System.out.println("Invalid! Try again.\n");
@@ -567,7 +568,6 @@ public class Database {
                 stmt.executeUpdate(sql);
                 stmt.close();
                 c.commit();
-//                c.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -773,48 +773,19 @@ public class Database {
         }
     }
 
-    /*// Print out all the data from userinfo
-    public static void printAllElementsFromUserinfo() {
-        try {
-            stmt = c.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM userinfo;");
-            while (rs.next()) {
-                String dbUsername = rs.getString("username");
-                String dbPassword = rs.getString("password");
-
-                System.out.println("Username: " + dbUsername);
-                System.out.println("Password: " + dbPassword);
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~");
+    /*
+     Used to close all connections (ResultSet, Statement, Connection)
+     Code in try block is essentially from Stack Overflow:
+     https://stackoverflow.com/questions/2225221/closing-database-connections-in-java
+     */
+    public static void closeAllConnections() {
+            try {
+                try { rs.close(); } catch (Exception e) { /* Ignored Exception */ }
+                try { stmt.close(); } catch (Exception e) { /* Ignored Exception */ }
+                try { c.close(); } catch (Exception e) { /* Ignored Exception */ }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            System.out.println("\n-> Printing out all info from userinfo. Done. \n");
-        } catch (Exception e) {
-            System.out.println("Failed to print all elements from userinfo");
-        }
     }
 
-    // Print out all the data from chat_messages
-    public static void printAllElementsFromChatMessages() {
-        try {
-            stmt = c.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM chat_messages;");
-            while (rs.next()) {
-                String dbRoomName = rs.getString("chat_room_name");
-                String dbUsername = rs.getString("username");
-                String dbMessage = rs.getString("message_content");
-                String dbMsgTimestamp = rs.getString("msg_sent_at");
-
-                System.out.println("Chat Room name: " + dbRoomName);
-                System.out.println("Username: " + dbUsername);
-                System.out.println("User's message: " + dbMessage);
-                System.out.println("Message Timestamp: " + dbMsgTimestamp);
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~");
-            }
-            System.out.println("\n-> Printing out all info from chat_messages. Done. \n");
-        } catch (Exception e) {
-            System.out.println("Failed to print all elements from chat_messages");
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-    }*/
 }
