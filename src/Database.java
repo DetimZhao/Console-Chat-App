@@ -2,7 +2,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 /*
@@ -31,7 +30,6 @@ public class Database {
     private static String loginUsername;
     private static String loginPassword;
     private static String chatRoomName;
-    private static ArrayList<String> connectedUsers = new ArrayList<>();
     static Scanner input = new Scanner(System.in);
 
     public static boolean isRegisterSuccessful() {
@@ -327,7 +325,7 @@ public class Database {
 
             // Prompt user to register username and password, adds input to table
             try {
-//                boolean registerSuccessful = false;
+                registerSuccessful = false; // MIGHT NOT NEED THIS CHECK AGAIN?
                 c.setAutoCommit(false); // Allows commits to the db
                 while (!registerSuccessful) {
                     stmt = c.createStatement();
@@ -335,7 +333,7 @@ public class Database {
                     String password = promptMessageForUser("Enter a password: ");
                     String sql = "INSERT INTO userinfo " +
                             "(username, password) " +
-                            "VALUES (" + "'" + username + "'" + "," + "'" + password + "'" + "); ";
+                            "VALUES (" + "'" + username + "'" + "," + "'" + password + "'" + ");";
 //                stmt.executeLargeUpdate(sql);
                     // Check if there are any issues registering username
                     try {
@@ -425,7 +423,7 @@ public class Database {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
-//                boolean loginSuccessful = false;
+                loginSuccessful = false;
                 while (!loginSuccessful) {
                     stmt = c.createStatement();
 //                    String loginUsername = promptMessageForUser("Enter your username: ");
@@ -433,7 +431,7 @@ public class Database {
                     loginUsername = promptMessageForUser("Enter your username: ");
                     loginPassword = promptMessageForUser("Enter your password: ");
                     rs = stmt.executeQuery("SELECT * FROM userinfo WHERE username = "
-                            + "'" + loginUsername + "'" + "; "); // Try to find user with query
+                            + "'" + loginUsername + "'" + ";"); // Try to find user with query
                     try {
                         if (rs.next()) { // If there is another row, then means user is found
                             String dbPassword = rs.getString("password");
@@ -582,6 +580,7 @@ public class Database {
      Make a data table to store chat room name, username, message, and message timestamp
      Inserts the name of the chat room into the data table, ensures it is only lowercase and digits
      Gives error when the chatroom already exists or if it includes uppercase letters or weird characters
+     Given an error, the user can choose to try again to create a room, join a room, or quit
      */
     public static void createChatRoom() {
         try {
@@ -622,21 +621,20 @@ public class Database {
                         // Use a new Statement object for the SELECT query
                         Statement selectStmt = c.createStatement();
                         ResultSet rs = selectStmt.executeQuery("SELECT * FROM chat_messages " +
-                                "WHERE chat_room_name = " + "'" + createRoomName + "'" + "; ");
+                                "WHERE chat_room_name = " + "'" + createRoomName + "'" + ";");
                         if (rs.next()) { // If there is another row, then means chat room already exists
                             System.out.println("The chat room already exists. Try again.");
                         } else {
                             String sql = "INSERT INTO chat_messages " +
                                     "(chat_room_name, username) " +
                                     "VALUES (" + "'" + createRoomName + "'" + "," +
-                                    "'" + getLoginUsername() + "'" + "); ";
+                                    "'" + getLoginUsername() + "'" + ");";
                             int rowsInserted = stmt.executeUpdate(sql);
                             if (rowsInserted == 1) { // Check if rows of table increased
                                 System.out.println("\nCreated Chat Room.\n");
                                 createChatRoomSuccessful = true;
                                 chatRoomName = createRoomName;
                                 System.out.println("Welcome to " + "\"" + createRoomName + "\" " + "(/help for commands)");
-                                connectedUsers.add(getLoginUsername());
                             }
                         }
                     } catch (Exception e) {
@@ -645,6 +643,30 @@ public class Database {
                         System.out.println("-----------------------------------------\n");
                         System.out.println("Your name cannot contain uppercase letters or weird characters.");
                         c.rollback(); // Rollback changes if an error occurs
+                        displayOptionsAfterCreateRoomFailed();
+                        boolean continueCreateRoom = false;
+                        String userCreateRoomInput;
+                        // Prompts user to try again to create a room, join a room, or to quit
+                        while (!continueCreateRoom) {
+                            userCreateRoomInput = input.nextLine();
+                            switch (userCreateRoomInput.toLowerCase()) {
+                                case "q", "quit":
+                                    System.out.println("Quitting Program.");
+                                    System.exit(0);
+                                    break;
+                                case "c", "continue":
+                                    System.out.println("Try again to create a room...\n");
+                                    break;
+                                case "j", "join":
+                                    joinChatRoom();
+                                    break;
+                                default:
+                                    System.out.println("Invalid! Try again.\n");
+                                    displayOptionsAfterCreateRoomFailed();
+                                    continue;
+                            }
+                            continueCreateRoom = true;
+                        }
                     }
                 }
                 c.commit();
@@ -653,7 +675,8 @@ public class Database {
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
             }
-            // TODO Add chat view
+            // User is connected. User should also automatically see chat view
+            addConnectedUser();
             chatRoomView();
         } catch (Exception e) {
             System.out.println("-> Connection Failed.");
@@ -661,6 +684,14 @@ public class Database {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
+    }
+
+    // Displays options for user when creating a chat room has failed
+    public static void displayOptionsAfterCreateRoomFailed() {
+        System.out.println("You may try to create a room again, join a room, or quit.\n");
+        System.out.println("Please select from the following options:");
+        System.out.println("(C)ontinue, (J)oin, (Q)uit");
+        System.out.println("-----------------------------------------");
     }
 
     /*
@@ -677,13 +708,12 @@ public class Database {
                 while(!joinChatRoomSuccessful) {
                     String joinChatRoomName = promptMessageForUser("Enter the name of the chat room to join: ");
                     rs = stmt.executeQuery("SELECT * FROM chat_messages WHERE chat_room_name = "
-                            + "'" + joinChatRoomName + "'" + "; "); // Try to find chat room with query
+                            + "'" + joinChatRoomName + "'" + ";"); // Try to find chat room with query
                     try {
                         if (rs.next()) { // If there is another row, then means chat room is found
                             joinChatRoomSuccessful = true;
                             chatRoomName = joinChatRoomName;
                             System.out.println("Welcome to " + "\"" + joinChatRoomName + "\" " + "(/help for commands)");
-                            connectedUsers.add(getLoginUsername());
                         }
                         else {
                             System.out.println("Failed to join chat room.");
@@ -695,8 +725,10 @@ public class Database {
                         System.exit(0);
                     }
                 }
-                // TODO join the chatroom and add /slash command
+                // User is connected to chatroom. User should also automatically see chat view
+                addConnectedUser();
                 chatRoomView();
+
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -730,7 +762,6 @@ public class Database {
                         } else {
                             // consider input as a full message and send to database
                             sendMessageToDatabase(userMsgInput);
-                            // TODO make method to save message in db
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -756,18 +787,96 @@ public class Database {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
-                // TODO save message to db
                 c.setAutoCommit(false); // Allows commits to the db
                 stmt = c.createStatement();
+                // For msgInput, replace every single quote with two single quotes, so it isn't read as end of string
                 String sql = "INSERT INTO chat_messages " +
                         "(chat_room_name, username, message_content) " +
                         "VALUES (" + "'" + getChatRoomName() + "'" +
                         "," + "'" + getLoginUsername() + "'" +
-                        "," + "'" + msgInput + "'" + "); ";
+                        "," + "'" + msgInput.replace("'", "''") + "'" + ");";
                 stmt.executeUpdate(sql);
                 stmt.close();
                 c.commit();
                 c.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                System.exit(0);
+            }
+        } catch (Exception e) {
+            System.out.println("-> Connection Failed.");
+            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        }
+    }
+
+    // Makes connected_users to store connected users of a chat room. Then adds the user and their info
+    public static void addConnectedUser() {
+        try {
+            c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            try {
+                try {
+                    stmt = c.createStatement();
+                    // Make data table to store connected users, specifying the chat room they are in
+                    String sql = "CREATE TABLE IF NOT EXISTS connected_users " +
+                            "(id SERIAL PRIMARY KEY, " +
+                            "chat_room_name VARCHAR(50) NOT NULL, " +
+                            "username VARCHAR(50) NOT NULL, " +
+                            "is_connected BOOLEAN NOT NULL DEFAULT true);";
+                    stmt.executeUpdate(sql);
+                    stmt.close();
+                    System.out.println("-> Attempt to make table has been completed.");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                    System.exit(0);
+                }
+                try {
+                    // Use a new Statement object for the SELECT query
+                    Statement selectStmt = c.createStatement();
+                    ResultSet rs = selectStmt.executeQuery("SELECT * FROM connected_users" +
+                            " WHERE chat_room_name = " + "'" + getChatRoomName() + "'" +
+                            " AND username = " + "'" + getLoginUsername()  + "'" + ";");
+                    /*
+                     If there is another row, then username and chat room means they have previously been
+                     in the chat room, so we need to update is_connected to be true again (when they leave it is false)
+                     If there isn't another row (else), then means chat room name and username isn't in the data table.
+                     Good since we don't want to add the same info again since it will mess up the query for /list
+                     */
+                    if (rs.next()) {
+                        c.setAutoCommit(false);
+                        Statement updateStmt = c.createStatement();
+                        // Because info already exists, they have left this room before and are back now
+                        String sql = "UPDATE connected_users SET is_connected = true" +
+                                " WHERE chat_room_name = " + "'" + getChatRoomName() + "'" +
+                                " AND username = " + "'" + getLoginUsername()  + "'" + ";";
+                        updateStmt.executeUpdate(sql);
+                        c.commit();
+                        updateStmt.close();
+                    }
+                    else {
+                        // Use a new Statement object for INSERT
+                        Statement insertStmt = c.createStatement();
+                        String sql = "INSERT INTO connected_users" +
+                                "(chat_room_name, username) " +
+                                "VALUES(" + "'" + getChatRoomName() + "'" + "," +
+                                "'" + getLoginUsername() + "'" + ");";
+                        int rowsInserted = insertStmt.executeUpdate(sql);
+                        if (rowsInserted == 1) { // Check if rows of table increased
+                            System.out.println("\n-> username and chat room name added to connected_users\n");
+                        }
+                        insertStmt.close();
+                    }
+                    rs.close();
+                    selectStmt.close();
+                } catch (Exception e) {
+                    System.out.println("-> Failed to insert chat room name and username into connected users");
+                    e.printStackTrace();
+                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                    System.exit(0);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -815,16 +924,13 @@ public class Database {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
-                // TODO /list command
-                /*
-                must consider when users are active in the chatroom
-                if one leaves, data might need to be deleted or excluded
-                 */
-                int i = 0;
-                while(i < connectedUsers.size()) {
-                    System.out.println("-" + connectedUsers.get(i));
-                    i++;
+                stmt = c.createStatement();
+                rs = stmt.executeQuery("SELECT * FROM connected_users WHERE is_connected = true;");
+                while (rs.next()) {
+                    String dbUsername = rs.getString("username");
+                    System.out.println("-" + dbUsername);
                 }
+                System.out.println("\n-> Printing out all connected users. \n");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -843,9 +949,16 @@ public class Database {
         try {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
-                // TODO /leave command
-                connectedUsers.remove(getLoginUsername());
+                c.setAutoCommit(false);
+                stmt = c.createStatement();
+                // Because user leaves chat room, set is_connected in data table to false
+                String sql = "UPDATE connected_users SET is_connected = false" +
+                        " WHERE chat_room_name = " + "'" + getChatRoomName() + "'" +
+                        " AND username = " + "'" + getLoginUsername()  + "'" + ";";
+                stmt.executeUpdate(sql);
+                c.commit();
             } catch (Exception e) {
+                System.out.println("-> Failed to update connected_users by setting is_connected to false");
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
@@ -865,12 +978,22 @@ public class Database {
             c = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             try {
                 // TODO /history command
+                stmt = c.createStatement();
+                rs = stmt.executeQuery("SELECT * FROM chat_messages WHERE chat_room_name = " +
+                        "'" + getChatRoomName() + "'" +
+                        "AND message_content <> '';");
+                while (rs.next()) {
+                    String dbUsername = rs.getString("username");
+                    String userMsg = rs.getString("message_content");
+                    System.out.println("- " + dbUsername + ":> " + userMsg);
+                }
+                System.out.println("\n-> Printing out all connected users. \n");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
                 System.exit(0);
             }
-            printAllElementsFromChatMessages(); // just for testing
+//            printAllElementsFromChatMessages(); // just for testing
         } catch (Exception e) {
             System.out.println("-> Connection Failed.");
             e.printStackTrace();
@@ -907,6 +1030,7 @@ public class Database {
     // Print out all the data from userinfo
     public static void printAllElementsFromUserinfo() {
         try {
+            stmt = c.createStatement();
             rs = stmt.executeQuery("SELECT * FROM userinfo;");
             while (rs.next()) {
                 String dbUsername = rs.getString("username");
@@ -925,6 +1049,7 @@ public class Database {
     // Print out all the data from chat_messages
     public static void printAllElementsFromChatMessages() {
         try {
+            stmt = c.createStatement();
             rs = stmt.executeQuery("SELECT * FROM chat_messages;");
             while (rs.next()) {
                 String dbRoomName = rs.getString("chat_room_name");

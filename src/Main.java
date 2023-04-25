@@ -7,11 +7,11 @@ public class Main {
         System.out.println("Welcome to the Chat App!\n");
         Database.connectToDB(); // Connect to db
         initialViewUserDecision(); // lets user pick option for initial view
-        if(Database.isRegisterSuccessful()) { // if register is successful, prompt login
-            System.out.println("You can now login.\n");
-            Database.userLogin();
-        }
         while (true) {
+            if(Database.isRegisterSuccessful()) { // if register is successful, prompt login
+                System.out.println("You can now login.\n");
+                Database.userLogin();
+            }
             if (Database.isLoginSuccessful() || Database.isLeaveChatRoom()) {
                 mainViewUserDecision(); // if login is successful or user leaves chat room, move to main view
             }
